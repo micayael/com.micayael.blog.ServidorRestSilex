@@ -4,82 +4,95 @@ namespace src\Entities;
 
 /**
  * Clase creada para simular la encapsulación de la creación de la sentencia SQL.
- * IMPORTANTE: No se estám previendo controles para no permitir SQL Injection 
  */
 class Comment 
 {
     
-    public $comment_post_id;
-    public $comment_author;
-    public $comment_author_email;
-    public $comment_author_url;
-    public $comment_author_IP;
-    public $comment_content;
-    public $comment_approved;
-    public $comment_agent;
-    public $comment_type;
-    public $comment_parent;
-    public $user_id;
+    public $id;
+    public $author;
+    public $email;
+    public $content;
+    public $created_at;
+    public $updated_at;
     
+    /**
+     * Retorna un SQL de ejemplo para hacer el insert
+     * @return string 
+     */
     public function getInsertSQL()
     {
-        $sql = "INSERT INTO wp_comments(
-                comment_post_id, 
-                comment_author, 
-                comment_author_email, 
-                comment_author_url, 
-                comment_author_IP, 
-                comment_content, 
-                comment_approved, 
-                comment_agent, 
-                comment_type, 
-                comment_parent, 
-                user_id
+        $sql = "INSERT INTO comments(
+                author, 
+                email, 
+                content, 
+                created_at
             ) 
-            VALUES (%d, '%s', '%s', '%s', '%s', '%s', %d, '%s', '%s', %d, %d)";
+            VALUES (%s, %s, %s, '%s')";
         
         $sql = sprintf(
             $sql, 
-            $this->comment_post_id,
-            $this->comment_author,
-            $this->comment_author_email,
-            $this->comment_author_url,
-            $this->comment_author_ip,
-            $this->comment_content,
-            $this->comment_approved,
-            $this->comment_agent,
-            $this->comment_type,
-            $this->comment_parent,
-            $this->user_id
+            $this->author,
+            $this->email,
+            $this->content,
+            date('Y-m-d H:i:s')
         );
         
         return $sql;
     }
     
-    public static function getSelectForExists($id)
+    /**
+     * Retorna un SQL de ejemplo para buscar un comentario cuyo id sea igual a $id
+     * @param int $id
+     * @return string 
+     */
+    public static function find($id)
     {
         $sql = "select * 
-                from wp_comments
-                where comment_id = %d";
+                from comments
+                where id = %d";
         $sql = sprintf($sql, $id);
         
         return $sql;
     }
     
+    /**
+     * Retorna un SQL de ejemplo para obtener todos los registros y columnas
+     * de la tabla
+     * @return string 
+     */
+    public static function findAll()
+    {
+        $sql = "select * 
+                from comments";
+        
+        return $sql;
+    }
+    
+    /**
+     * Retorna un SQL de ejemplo para hacer un update del campo $content al 
+     * comentario int $id
+     * @param string $content
+     * @return string
+     */
     public static function getUpdateSQL($id, $content)
     {
-        $sql = "update wp_comments
-                set comment_content = '%s'
-                where comment_id = %d";
+        $sql = "update comments
+                set content = %s
+                where id = %d";
         $sql = sprintf($sql, $content, $id);
         
         return $sql;
     }
     
+    /**
+     * Retorna un SQL de ejemplo para eliminar el comentario con id igual a $id
+     * @param int $id
+     * @return string 
+     */
     public static function getDeleteSQL($id)
     {
-        $sql = "delete from wp_comments
-                where comment_id = %d";
+        $sql = "delete from comments
+                where id = %d";
         $sql = sprintf($sql, $id);
         
         return $sql;

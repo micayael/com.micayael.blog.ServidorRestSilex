@@ -7,34 +7,25 @@ use src\Entities\Comment;
 
 require_once (BASE_DIR . '/src/Entities/Comment.php');
 
+
 $app->get('/ver-comentarios.{format}', function() use($app){
     
-    $sql = "select 
-            case 
-                when c.comment_parent != 0 then c.comment_parent
-                else c.comment_id
-            end as hilo,
-            c.comment_id, 
-            c.comment_parent,
-            c.comment_date,
-            c.comment_author,
-            c.comment_author_email,
-            c.comment_author_url
-        from wp_comments c
-        where c.comment_approved = 1
-        order by hilo, c.comment_date";
+    $sql = Comment::findAll();
     
+    //-- Obtenemos los datos de la base de datos y aplicamos el utf8_encode() 
+    //   a cada item del array llamado a nuestro método utf8_converter() definido
+    //   en src\util.php
     $comentarios = $app['db']->fetchAll($sql);
     $comentarios = utf8_converter($comentarios);
     
-    //-- Una vez encontrados los datos retornamos un código HTTP 200 - OK
+    //-- Una vez encontrados los datos, los retornamos con un código HTTP 200 - OK
     return new Response(json_encode($comentarios), 200); 
     
 });
 
 $app->post('/crear-comentario.{format}', function(Request $request) use($app){
     
-    //-- Controlamos que los parámetros que deben lleguen por POST efectivamente
+    //-- Controlamos que los parámetros que deben llegar por POST efectivamente
     //   lleguen y en el caso de que no lo hagan enviamos un error con código 
     //   400 - Solicitud incorrecta
     if (!$comment = $request->get('comment'))
@@ -42,21 +33,17 @@ $app->post('/crear-comentario.{format}', function(Request $request) use($app){
         return new Response('Parametros insuficientes', 400);
     }
 
+    //-- Utilizamos como ejemplo un objeto Comentario para delegar la creación 
+    //   del SQL utilizando el método PDO::quote() para no tener problemas con 
+    //   SQL Injection.
     $c = new Comment();
-    $c->comment_post_id = $comment['comment_post_id'];
-    $c->comment_author = $comment['comment_author'];
-    $c->comment_author_email = $comment['comment_author_email'];
-    $c->comment_author_url = $comment['comment_author_url'];
-    $c->comment_author_IP = $comment['comment_author_IP'];
-    $c->comment_content = $comment['comment_content'];
-    $c->comment_approved = $comment['comment_approved'];
-    $c->comment_agent = $comment['comment_agent'];
-    $c->comment_type = $comment['comment_type'];
-    $c->comment_parent = $comment['comment_parent'];
-    $c->user_id = $comment['user_id'];
+    $c->author = $app['db']->quote($comment['author']);
+    $c->email = $app['db']->quote($comment['email']);
+    $c->content = $app['db']->quote($comment['content']);
     
     $sql = $c->getInsertSQL();
     
+    //-- Ejecutamos la sentencia
     $app['db']->exec($sql);
     
     //-- En caso de exito retornamos el código HTTP 201 - Creado
@@ -66,7 +53,7 @@ $app->post('/crear-comentario.{format}', function(Request $request) use($app){
 
 $app->put('actualizar-comentario/{id}.{format}', function($id) use($app){
     
-    //-- Controlamos que los parámetros que deben lleguen por POST efectivamente
+    //-- Controlamos que los parámetros que deben llegar por POST efectivamente
     //   lleguen y en el caso de que no lo hagan enviamos un error con código 
     //   400 - Solicitud incorrecta
     //-- También podemos usar directamente la Injección de dependecias para 
@@ -77,7 +64,9 @@ $app->put('actualizar-comentario/{id}.{format}', function($id) use($app){
         return new Response('Parametros insuficientes', 400);
     }
     
-    $sql = Comment::getSelectForExists($id);
+    //-- Obtenemos el select para encontrar un comentario de acuerdo al $id y
+    //   comprobar que lo que vamos a modificar realmente exista.
+    $sql = Comment::find($id);
     
     $comentario = $app['db']->fetchAll($sql);
     
@@ -88,8 +77,12 @@ $app->put('actualizar-comentario/{id}.{format}', function($id) use($app){
         return new Response('Comentario no encontrado.', 404);
     }
     
-    $sql = Comment::getUpdateSQL($id, $comment['comment_content']);
+    //-- Si existe el comentario a modificar obtenemos el SQL para el update y
+    //   lo ejecutamos
+    $content = $app['db']->quote($comment['content']);
+    $sql = Comment::getUpdateSQL($id, $content);
     
+    //-- Ejecutamos la sentencia
     $app['db']->exec($sql);
     
     //-- En caso de exito retornamos el código HTTP 200 - OK
@@ -99,7 +92,9 @@ $app->put('actualizar-comentario/{id}.{format}', function($id) use($app){
 
 $app->delete('eliminar-comentario/{id}.{format}', function($id) use($app){
     
-    $sql = Comment::getSelectForExists($id);
+    //-- Obtenemos el select para encontrar un comentario de acuerdo al $id y
+    //   comprobar que lo que vamos a eliminar realmente exista.
+    $sql = Comment::find($id);
     
     $comentario = $app['db']->fetchAll($sql);
     
@@ -110,6 +105,7 @@ $app->delete('eliminar-comentario/{id}.{format}', function($id) use($app){
         return new Response('Comentario no encontrado.', 404);
     }
     
+    //-- Obtenemos el SQL para eliminar el comentario y ejecutamos la sentencia
     $sql = Comment::getDeleteSQL($id);
     
     $app['db']->exec($sql);

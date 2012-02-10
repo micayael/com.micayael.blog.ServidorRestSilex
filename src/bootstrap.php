@@ -9,11 +9,11 @@ $app = new Silex\Application();
 //-- Configuramos la base de datos
 $app->register(new Silex\Provider\DoctrineServiceProvider(), array(
     'db.options'        => array(
-        'driver'        => 'pdo_mysql',
-        'host'          => 'localhost',
-        'dbname'        => 'restsilex',
-        'user'          => 'root',
-        'password'      => 'root',
+        'driver'        => DB_DRIVER,
+        'host'          => DB_HOST,
+        'dbname'        => DB_NAME,
+        'user'          => DB_USER,
+        'password'      => DB_PASS,
     ),
     'db.config' => array(),
     'db.dbal.class_path'    => BASE_DIR . '/vendor/doctrine-dbal/lib',

@@ -5,6 +5,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 //------------------------------------------------------------------------------
 
+require_once (BASE_DIR . '/src/config.php');
 require_once (BASE_DIR . '/src/bootstrap.php');
 require_once (BASE_DIR . '/src/util.php');
 $app = require(BASE_DIR . '/src/controllers.php');

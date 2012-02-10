@@ -14,8 +14,8 @@ $app = require_once (BASE_DIR . '/src/app.php');
 $app['debug'] = true;
 
 //-- Asignamos el usuario y contraseña para el acceso al servicio
-$app['auth.user'] = 'admin';
-$app['auth.pass'] = '123456';
+$app['auth.user'] = AUTH_USER;
+$app['auth.pass'] = AUTH_PASS;
 
 //-- Ejecutamos la aplicación
 $app->run();
